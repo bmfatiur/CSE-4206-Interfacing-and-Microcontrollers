@@ -1,0 +1,412 @@
+led
+
+
+void main() {
+     TRISB=0x00;  //b as output
+     PORTB=0x00; //bo off
+     while(1){
+         portb=0xff;
+         delay_ms(200);
+         portb=0x00;
+         delay_ms(200);
+     }
+}
+
+
+
+
+
+
+
+
+stepper
+
+void main() {
+    const int delay=1000;
+    TRISD=0x00;
+    PORTD=0xff;
+    
+    while(1){
+        portd=0b00001001;
+        delay_ms(delay);
+        portd=0b00001100;
+        delay_ms(delay);
+        portd=0b00000110;
+        delay_ms(delay);
+        portd=0b00000011;
+        delay_ms(delay);
+    }
+}
+
+
+
+
+
+
+relay
+
+
+
+void main() {
+    TRISB=0x00;
+    portb=0x00;
+    while(1)
+    {
+        PORTB.F0=1;
+        delay_ms(1000);
+        PORTB.F0=0;
+        delay_ms(1000);
+    }
+}
+
+
+
+
+
+
+
+
+dot matrix
+
+
+
+void main() {
+    const int delay=5;
+    
+    TRISB=0x00;
+    TRISD=0x00;
+    
+    while(1){
+        portb=0x00;
+        portd=0x80;
+        delay_ms(delay);
+        
+        portb=0xff;
+        portd=0x40;
+        delay_ms(delay);
+        
+        portb=0xff;
+        portd=0x20;
+        delay_ms(delay);
+        
+        portb=0x18;
+        portd=0x10;
+        delay_ms(delay);
+        
+        portb=0x18;
+        portd=0x08;
+        delay_ms(delay);
+        
+        portb=0xff;
+        portd=0x04;
+        delay_ms(delay);
+        
+        portb=0xff;
+        portd=0x02;
+        delay_ms(delay);
+        
+        portb=0x00;
+        portd=0x01;
+        delay_ms(delay);
+    }
+}
+
+
+
+
+
+
+
+ADC
+
+
+int valADC;
+char x[4];
+void main() {
+    UART1_Init(9600);
+    ADC_Init();
+    
+    while(1){
+        valADC=ADC_Read(3);
+        IntToStr(valADC, x);
+        UART1_Write_Text("Analog Value = ");
+        UART1_Write_Text(x);
+        
+        strcpy(x,"");
+        UART1_Write(13);
+        delay_ms(1000);
+    }
+}
+
+
+
+
+
+lm35 
+
+
+
+  //Title: LCD interfacing with PIC16f877a
+
+  //LCD module connections
+
+  sbit LCD_RS at RB2_bit; //LCD reset
+  sbit LCD_EN at RB3_bit; //LCD enable
+
+  sbit LCD_D4 at RB4_bit; //Data
+  sbit LCD_D5 at RB5_bit; //Data
+  sbit LCD_D6 at RB6_bit; //Data
+  sbit LCD_D7 at RB7_bit; //Data
+
+
+  //LCD Pin Direction
+
+  sbit LCD_RS_Direction at TRISB2_bit;
+  sbit LCD_EN_Direction at TRISB3_bit;
+  sbit LCD_D4_Direction at TRISB4_bit;
+  sbit LCD_D5_Direction at TRISB5_bit;
+  sbit LCD_D6_Direction at TRISB6_bit;
+  sbit LCD_D7_Direction at TRISB7_bit;
+
+  int i;
+  float temp,display;
+  char t[16];
+
+void main() {
+  TRISB=0x00;
+  TRISA=0xff;
+  adcon1=0x80;
+  Lcd_Init();
+  ADC_init();
+
+  Lcd_cmd(_LCD_CLEAR);
+  Lcd_cmd(_LCD_CURSOR_OFF);
+
+  Lcd_out(1,1,"Temp:  ");
+  while(1) {
+      unsigned int temp1=ADC_read(3);
+      temp=temp1*4.88;
+      temp=temp/10;
+      floattostr(temp,t);
+      lcd_out(1,6,t);
+      lcd_chr(1,15,223);
+      lcd_out_cp("C");
+
+      }
+
+  }
+
+
+
+
+dc motor
+
+void main() {
+    short duty=0;
+    TRISB=0x00;
+    TRISD=0xff;
+    
+    //anti clock
+    portb.f0=0xff;
+    portb.f1=0x00;
+    
+    PWM2_Init(1000);
+    PWM2_Start();
+    PWM2_Set_Duty(duty);
+
+    while(1){
+        if(portd.f0==0xff && duty<246){
+            delay_ms(100);
+            if(portd.f0==0xff && duty<246){
+                duty=duty+10;
+                PWM2_Set_Duty(duty);
+            }
+        }
+        if(portd.f1==0xff && duty>9){
+            delay_ms(100);
+            if(portd.f1==0xff && duty>9){
+                duty=duty-10;
+                PWM2_Set_Duty(duty);
+            }
+        }
+        delay_ms(10);
+    }
+}
+
+
+
+7 seg 4 digit
+
+
+
+char digits[]={0xC0, 0xF9, 0xA4, 0xB0, 0x99, 0x92, 0x82, 0xF8, 0x80, 0x90};
+
+void main(){
+
+    const int delay=5;
+    int i, j, digit[4];
+    TRISB=0x00;//out
+    TRISC=0x00;
+    portb=0xff;
+    portc=0x00;
+
+    for(i=0;i<=9999;i++){
+        digit[0]=i/1000;
+        digit[1]=(i/100)%10;
+        digit[2]=(i/10)%10;
+        digit[3]=i%10;
+
+        for(j=0;j<50;j++){
+            portc.f0=0xff;
+            portb=digits[digit[0]];
+            delay_ms(delay);
+
+            portc.f0=0x00;
+            portc.f1=0xff;
+            portb=digits[digit[1]];
+            delay_ms(delay);
+
+            portc.f1=0x00;
+            portc.f2=0xff;
+            portb=digits[digit[2]];
+            delay_ms(delay);
+
+            portc.f2=0x00;
+            portc.f3=0xff;
+            portb=digits[digit[3]];
+            delay_ms(delay);
+            portc.f3=0x00;
+        }
+    }
+}
+
+
+
+
+
+
+7 seg button
+
+char digits[]={0xC0, 0xF9, 0xA4, 0xB0, 0x99, 0x92, 0x82, 0xF8, 0x80, 0x90};
+
+void main() {
+    int i=0;
+    const int delay=150;
+    TRISB=0x00; //output
+    TRISC=0xff; //input
+    portb=0xC0;
+    
+    while(1){
+             //dec
+             if(portc.f0==0xff){
+                             delay_ms(delay);
+                             if(portc.f0==1){
+                                  if(i>0) i--;
+                                  portb=digits[i];
+                             }
+             }
+             //inc
+             else if(portc.f1==0xff){
+                  delay_ms(delay);
+                  if(portc.f1==1){
+                                  if(i<9) i++;
+                                  portb=digits[i];
+                  }
+             }
+    }
+}
+
+
+
+
+servo
+
+void servoRotate0(){
+    int i;
+    for(i=0;i<50;i++){
+        portb.f0=1;
+        delay_us(800);
+        portb.f0=0;
+        delay_us(19200);
+    }
+}
+void servoRotate90(){
+    int i;
+    for(i=0;i<50;i++){
+        portb.f0=1;
+        delay_us(1500);
+        portb.f0=0;
+        delay_us(18500);
+    }
+}
+void servoRotate180(){
+    int i;
+    for(i=0;i<50;i++){
+        portb.f0=1;
+        delay_us(2200);
+        portb.f0=0;
+        delay_us(17800);
+    }
+}
+
+void main() {
+    TRISB=0x00;
+    PORTB=0x00;
+    while(1){
+        servoRotate0();
+        delay_ms(5000);
+        servoRotate90();
+        delay_ms(5000);
+        servoRotate180();
+        delay_ms(5000);
+    }
+}
+
+
+
+
+
+
+
+dot
+
+void main() {
+    const int delay=5;
+    
+    TRISB=0x00;
+    TRISD=0x00;
+    
+    while(1){
+        portb=0x00;
+        portd=0x80;
+        delay_ms(delay);
+        
+        portb=0xff;
+        portd=0x40;
+        delay_ms(delay);
+        
+        portb=0xff;
+        portd=0x20;
+        delay_ms(delay);
+        
+        portb=0x18;
+        portd=0x10;
+        delay_ms(delay);
+        
+        portb=0x18;
+        portd=0x08;
+        delay_ms(delay);
+        
+        portb=0xff;
+        portd=0x04;
+        delay_ms(delay);
+        
+        portb=0xff;
+        portd=0x02;
+        delay_ms(delay);
+        
+        portb=0x00;
+        portd=0x01;
+        delay_ms(delay);
+    }
+}
